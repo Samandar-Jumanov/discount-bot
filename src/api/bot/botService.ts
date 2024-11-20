@@ -1,15 +1,26 @@
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { logger } from "@/server";
-import { ICreateCustomerSchema, ICustomer, IDiscountedDish, IFindRestuarantSchema } from "./botModel";
+import { ICustomer, IDiscountedDish, IFindRestuarantSchema } from "./botModel";
 import prisma from "@/database/prisma";
 
 export class BotService {
   private readonly MAX_DISTANCE_KM = 5;
   private readonly MAX_RESULTS = 10;
 
-  async createCustomer(data: { telegramId: string }): Promise<ServiceResponse<ICustomer | null>> {
+  async createCustomer(data: { telegramId: string }): Promise<ServiceResponse<ICustomer  | null>> {
     try {
+
+      const existing = await prisma.customer.findUnique({
+          where: {
+            telegramId: data.telegramId,
+          },
+        });
+
+        if(existing) {
+          logger.warn(`Customer logged in with ${data.telegramId}`)
+          return ServiceResponse.success("Created successfully", existing as any , 201);
+        }
 
       const customer = await prisma.customer.create({
         data: {
@@ -31,27 +42,29 @@ export class BotService {
       const { latitude, longitude } = data;
       const currentTime = new Date();
 
-      const nearbyDiscounts = await prisma.discount.findMany({
-        include: {
-          branch: {
-            include: {
-              restaurant: true,
-            },
-          },
-        },
-        where: {
-          isActive: true,
-          startTime: {
-            lte: currentTime,
-          },
-          endTime: {
-            gt: currentTime,
-          },
-          quantity: {
-            gt: 0,
-          },
-        },
-      });
+      const nearbyDiscounts = await prisma.discount.findMany();
+
+      // {
+      //   include: {
+      //     branch: {
+      //       include: {
+      //         restaurant: true,
+      //       },
+      //     },
+      //   },
+      //   where: {
+      //     isActive: true,
+      //     startTime: {
+      //       lte: currentTime,
+      //     },
+      //     endTime: {
+      //       gt: currentTime,
+      //     },
+      //     quantity: {
+      //       gt: 0,
+      //     },
+      //   },
+      // }
 
       if (!nearbyDiscounts.length) {
         logger.info("No nearby restaurants with active discounts found");
@@ -62,25 +75,25 @@ export class BotService {
         );
       }
 
-      const discountedDishes: IDiscountedDish[] = nearbyDiscounts.map((discount) => ({
-        restaurantName: discount.branch.restaurant.name,
-        branchAddress: discount.branch.address,
-        branchDescription: discount.branch.description,
-        distanceKm: 0, // Note: You'll need to implement distance calculation
-        dishName: discount.dishName,
-        dishImage: discount.dishImage,
-        description: discount.description,
-        discountCode: discount.code,
-        currency: discount.currency,
-        originalPrice: discount.originalPrice,
-        discountPrice: discount.discountPrice,
-        quantity: discount.quantity,
-        validUntil: discount.endTime,
-        isActive: discount.isActive,
-      }));
+      // const discountedDishes: IDiscountedDish[] = nearbyDiscounts.map((discount) => ({
+      //   restaurantName: discount.branch.restaurant.name,
+      //   branchAddress: discount.branch.address,
+      //   branchDescription: discount.branch.description,
+      //   distanceKm: 0, 
+      //   dishName: discount.dishName,
+      //   dishImage: discount.dishImage,
+      //   description: discount.description,
+      //   discountCode: discount.code,
+      //   currency: discount.currency,
+      //   originalPrice: discount.originalPrice,
+      //   discountPrice: discount.discountPrice,
+      //   quantity: discount.quantity,
+      //   validUntil: discount.endTime,
+      //   isActive: discount.isActive,
+      // }));
 
-      logger.info(`Found ${discountedDishes.length} active discounts in nearby restaurants`);
-      return ServiceResponse.success("Nearby discounts found", discountedDishes, StatusCodes.OK);
+      logger.info(`Found ${nearbyDiscounts.length} active discounts in nearby restaurants`);
+      return ServiceResponse.success("Nearby discounts found", nearbyDiscounts, StatusCodes.OK);
     } catch (error) {
       logger.error("Error finding nearby restaurants:", error);
       return ServiceResponse.failure("Internal server error", null, StatusCodes.INTERNAL_SERVER_ERROR);

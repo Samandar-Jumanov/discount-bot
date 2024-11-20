@@ -18,6 +18,9 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.0.0",
+    "@neondatabase/serverless": "^0.10.3",
+    "@prisma/adapter-neon": "^5.22.0",
+    "@prisma/adapter-pg": "^5.22.0",
     "@prisma/client": "^5.22.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -34,14 +37,17 @@
     "prisma": "^5.22.0",
     "swagger-ui-express": "^5.0.0",
     "telegraf": "^4.16.3",
+    "ws": "^8.18.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/pg": "^8.11.10",
     "@types/supertest": "^6.0.2",
     "@types/swagger-ui-express": "^4.1.6",
+    "@types/ws": "^8.5.13",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "pino-pretty": "^11.0.0",

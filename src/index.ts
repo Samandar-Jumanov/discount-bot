@@ -7,10 +7,13 @@ import prisma from "./database/prisma";
 const server = app.listen(env.PORT, async () => {
   const { NODE_ENV, HOST, PORT } = env;
   bot.launch(); 
-  await prisma.$connect()
-  logger.warn("Database connected")
+  await prisma.$connect().then(( res ) => {
+          logger.info("Database connected")
+  }).catch(( err ) => {
+        logger.error("Failed to connect to database", err)
+        process.exit(1)  
+  })
   logger.info(`Server (${NODE_ENV}) running on port http://${HOST}:${PORT}`);
-
 });
 
 const onCloseSignal = () => {
