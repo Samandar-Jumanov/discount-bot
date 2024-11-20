@@ -1,0 +1,81 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  address     String
+  password    String
+  phone       String    @unique
+  branchCount  Int @default(0)
+  addedBranches Int @default(0)
+  customerCount   Int @default(0)
+  activeDiscounts    Int @default(0)
+  discountCount      Int @default(0)
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  branches   Branch[]
+}
+
+model Branch {
+     id   String  @id @default(uuid())
+     restuarantId    String
+     latitude      Float
+     longitude     Float
+     description   String 
+     address        String
+     restaurant  Restaurant @relation(fields: [restuarantId], references: [id])
+     discount Discount[]
+
+     discountCount   Int @default(0)
+
+      createdAt   DateTime    @default(now())
+      updatedAt   DateTime    @updatedAt  @default(now())
+
+}
+
+model Discount {
+  id            String     @id @default(uuid())
+  branchId  String
+  branch    Branch @relation(fields: [branchId], references: [id])
+  dishName      String
+  dishImage     String
+  description   String
+  code          String
+
+  currency      String   @default("UZS")
+  originalPrice String
+  discountPrice String
+  quantity      Int 
+  
+  startTime     DateTime
+  endTime       DateTime
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  customerCount   Int @default(0)
+
+  customer     Customer[]
+
+  
+}
+
+model Customer {
+  id         String   @id @default(uuid())
+  telegramId String   @unique
+  latitude   Float?
+  longitude  Float?
+  discounts   Discount[]
+  lastActive DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt  @default(now())
+}
